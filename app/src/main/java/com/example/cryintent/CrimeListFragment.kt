@@ -1,11 +1,10 @@
 package com.example.cryintent
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import android.view.*
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -13,11 +12,16 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.util.UUID
 
 private const val TAG = "CrimeListFragment"
 
 class CrimeListFragment : Fragment() {
 
+    interface Callbacks{
+        fun onCrimeSelected(crimeId: UUID)
+    }
+    private var callbacks: Callbacks? = null
     private lateinit var crimeRecyclerView: RecyclerView
     private var adapter : CrimeAdapter? = CrimeAdapter(emptyList())
     private val crimeListViewModel: CrimeListViewModel by lazy {
@@ -29,6 +33,10 @@ class CrimeListFragment : Fragment() {
         }
     }
 
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        callbacks = context as Callbacks?
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -68,7 +76,7 @@ private inner class CrimeHolder(view: View): RecyclerView.ViewHolder(view), View
     }
 
     override fun onClick(v: View?) {
-        Toast.makeText(context, "${crime.title} pressed", Toast.LENGTH_SHORT ).show()
+        callbacks?.onCrimeSelected(crime.id)
     }
 }
     private inner class CrimeAdapter(var crimes: List<Crime>): RecyclerView.Adapter<CrimeHolder>(){
@@ -97,5 +105,20 @@ private inner class CrimeHolder(view: View): RecyclerView.ViewHolder(view), View
                     updateUI(crimes)
                 }
             })
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        callbacks = null
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.fragment_crime_list, menu)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
     }
 }
